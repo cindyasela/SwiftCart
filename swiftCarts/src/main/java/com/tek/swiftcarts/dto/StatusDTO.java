@@ -12,11 +12,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class StatusDTO {
+
     private String id;
     private String name;
     private String description;
     private LocalDateTime createdAt;
-    private UsersDTO createdBy;
+    private String createdById;
 
 
 }

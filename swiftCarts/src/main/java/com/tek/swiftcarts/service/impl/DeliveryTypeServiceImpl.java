@@ -11,6 +11,7 @@ import com.tek.swiftcarts.model.Users;
 import com.tek.swiftcarts.repository.DeliveryTypeRepository;
 import com.tek.swiftcarts.repository.StatusRepository;
 import com.tek.swiftcarts.repository.UsersRepository;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.DeliveryTypeService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,7 @@ public class DeliveryTypeServiceImpl implements DeliveryTypeService {
     private final StatusRepository statusRepository;
     private final DeliveryTypeRepository typeRepository;
 
-
-    public SystemResponse registerDeliveryType(DeliveryTypeDTO dto){
+    public SystemResponse registerDeliveryType(DeliveryTypeDTO dto, SwiftCartPrincipal principal){
 
         DeliveryType type =new DeliveryType();
 
@@ -37,15 +37,12 @@ public class DeliveryTypeServiceImpl implements DeliveryTypeService {
         type.setDescription(dto.getDescription());
         type.setUpdatedAt(LocalDateTime.now());
 
-        Optional<Users>users=usersRepository.findById(dto.getCreatedBy().getId());
+        Users user = usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
 
-        if (users.isEmpty()) {
-           throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"User is Empty");
-        }
+        type.setCreatedBy(user);
 
-        type.setCreatedBy(users.get());
-
-        type.setUpdatedBy(users.get());
+        type.setUpdatedBy(user);
 
         Optional<Status>active=statusRepository.findByName("ACTIVE");
 

@@ -19,5 +19,9 @@ public class ErrorResponse {
     private RequestStatus status;
 
     public ErrorResponse(String code, String message, int httpStatus, LocalDateTime now) {
+        this.errorCode = code;
+        this.message = message;
+        this.statusCode = httpStatus;
+        this.timeStamp = now.toLocalDate();
     }
 }

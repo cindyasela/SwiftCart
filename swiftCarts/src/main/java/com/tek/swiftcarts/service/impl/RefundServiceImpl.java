@@ -10,6 +10,7 @@ import com.tek.swiftcarts.repository.OrderRepository;
 import com.tek.swiftcarts.repository.RefundRepository;
 import com.tek.swiftcarts.repository.StatusRepository;
 import com.tek.swiftcarts.repository.UsersRepository;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.RefundService;
 import com.tek.swiftcarts.utils.DTOConverters;
 import lombok.AllArgsConstructor;
@@ -28,21 +29,22 @@ public class RefundServiceImpl implements RefundService {
     private final StatusRepository statusRepository;
     private final RefundRepository refundRepository;
 
-    public RefundsDTO registerRefund(RefundsDTO dto){
+    private Users resolveActor(SwiftCartPrincipal principal) {
+
+        return usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
+    }
+
+    public RefundsDTO registerRefund(RefundsDTO dto, SwiftCartPrincipal principal){
 
         Refunds refunds =new Refunds();
 
-        refunds.setId(dto.getId());
         refunds.setAmount(dto.getAmount());
         refunds.setCreatedAt(LocalDateTime.now());
         refunds.setNotes(dto.getNotes());
         refunds.setReason(dto.getReason());
 
-        Optional<Users> users=usersRepository.findById(dto.getCreatedBy().getId());
-
-        if (users.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Users is not Available");
-        }
-        refunds.setCreatedBy(users.get());
+        refunds.setCreatedBy(resolveActor(principal));
 
         Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
 
@@ -65,7 +67,7 @@ public class RefundServiceImpl implements RefundService {
         return dto;
     }
 
-    public RefundsDTO approveRefunds (RefundsDTO dto){
+    public RefundsDTO approveRefunds (RefundsDTO dto, SwiftCartPrincipal principal){
 
         Refunds refunds = refundRepository.findById(dto.getId())
                 .orElseThrow(() ->
@@ -79,11 +81,7 @@ public class RefundServiceImpl implements RefundService {
         refunds.setNotes(dto.getNotes());
         refunds.setReason(dto.getReason());
 
-        Optional<Users> users=usersRepository.findById(dto.getCreatedBy().getId());
-
-        if (users.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Users is not Available");
-        }
-        refunds.setCreatedBy(users.get());
+        refunds.setCreatedBy(resolveActor(principal));
 
         Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
 
@@ -107,7 +105,7 @@ public class RefundServiceImpl implements RefundService {
 
     public List<RefundsDTO>fetchAllRefunds(){
 
-        List<Refunds>refunds=refundRepository.findAll();
+        List<Refunds>refunds=refundRepository.findAllByOrderByCreatedAtDesc();
 
         return refunds.stream()
                 .map(DTOConverters::convertToDTO)
@@ -116,7 +114,7 @@ public class RefundServiceImpl implements RefundService {
 
 
 
-    public RefundsDTO rejectRefunds (RefundsDTO dto){
+    public RefundsDTO rejectRefunds (RefundsDTO dto, SwiftCartPrincipal principal){
 
         Refunds refunds = refundRepository.findById(dto.getId())
                 .orElseThrow(() ->
@@ -130,11 +128,7 @@ public class RefundServiceImpl implements RefundService {
         refunds.setNotes(dto.getNotes());
         refunds.setReason(dto.getReason());
 
-        Optional<Users> users=usersRepository.findById(dto.getCreatedBy().getId());
-
-        if (users.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Users is not Available");
-        }
-        refunds.setCreatedBy(users.get());
+        refunds.setCreatedBy(resolveActor(principal));
 
         Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
 
@@ -159,7 +153,7 @@ public class RefundServiceImpl implements RefundService {
 
 
 
-    public RefundsDTO processRefunds (RefundsDTO dto){
+    public RefundsDTO processRefunds (RefundsDTO dto, SwiftCartPrincipal principal){
 
         Refunds refunds = refundRepository.findById(dto.getId())
                 .orElseThrow(() ->
@@ -173,11 +167,7 @@ public class RefundServiceImpl implements RefundService {
         refunds.setNotes(dto.getNotes());
         refunds.setReason(dto.getReason());
 
-        Optional<Users> users=usersRepository.findById(dto.getCreatedBy().getId());
-
-        if (users.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Users is not Available");
-        }
-        refunds.setCreatedBy(users.get());
+        refunds.setCreatedBy(resolveActor(principal));
 
         Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
 

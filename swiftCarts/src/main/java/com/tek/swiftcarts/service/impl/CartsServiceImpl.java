@@ -6,6 +6,7 @@ import com.tek.swiftcarts.exception.AppException;
 import com.tek.swiftcarts.exception.ErrorCodes;
 import com.tek.swiftcarts.model.*;
 import com.tek.swiftcarts.repository.*;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,17 +24,19 @@ public class CartsServiceImpl {
     private final CartItemsRepository itemsRepository;
     private final ProductRepository productRepository;
 
+    private Users resolveActor(SwiftCartPrincipal principal) {
 
+        return usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
+    }
 
-    public CartsDTO createNewCart(CartsDTO dto){
+    public CartsDTO createNewCart(CartsDTO dto, SwiftCartPrincipal principal){
 
         Carts carts=new Carts();
 
         carts.setName(dto.getName());
 
-     Users users=usersRepository.findById(dto.getCreatedBy().getId()).orElseThrow(() ->
-             new AppException(
-             ErrorCodes.RESOURCE_NOT_FOUND,"Users Not Found"));
+     Users users = resolveActor(principal);
 
      carts.setCreatedBy(users);
 
@@ -45,8 +48,6 @@ public class CartsServiceImpl {
         }
 
         carts.setStatus(activeStatus.get());
-
-        carts.setId(dto.getId());
 
         carts.setUpdatedAt(LocalDateTime.now());
 
@@ -100,14 +101,11 @@ public class CartsServiceImpl {
 
 
             carts.setCartItems(cartItems);
-
-            Carts savedCart = cartRepository.save(carts);
-
-            return mapToDTO(savedCart);
-
         }
 
-        return dto;
+        Carts savedCart = cartRepository.save(carts);
+
+        return mapToDTO(savedCart);
     }
 
 
@@ -134,7 +132,7 @@ public class CartsServiceImpl {
 
 
 
-    public CartsDTO addItemCart(String cartId , CartItemsDTO dto) {
+    public CartsDTO addItemCart(String cartId , CartItemsDTO dto, SwiftCartPrincipal principal) {
 
         Carts carts = cartRepository.findById(cartId).
                 orElseThrow(() -> new AppException
@@ -142,9 +140,7 @@ public class CartsServiceImpl {
 
         carts.setUpdatedAt(LocalDateTime.now());
 
-        Users users = usersRepository.findById(dto.getUpdatedBy().getId()).
-                orElseThrow(() -> new AppException
-                        (ErrorCodes.RESOURCE_NOT_FOUND, "User Not Found"));
+        Users users = resolveActor(principal);
 
         carts.setUpdatedBy(users);
 
@@ -233,7 +229,7 @@ public class CartsServiceImpl {
 
     }
 
-    public CartsDTO removeItemCart(String cartId,CartItemsDTO dto) {
+    public CartsDTO removeItemCart(String cartId,CartItemsDTO dto, SwiftCartPrincipal principal) {
 
 
         Carts carts = cartRepository.findById(cartId).
@@ -242,9 +238,7 @@ public class CartsServiceImpl {
 
         carts.setUpdatedAt(LocalDateTime.now());
 
-        Users users = usersRepository.findById(dto.getUpdatedBy().getId()).
-                orElseThrow(() -> new AppException
-                        (ErrorCodes.RESOURCE_NOT_FOUND, "User Not Found"));
+        Users users = resolveActor(principal);
 
         carts.setUpdatedBy(users);
 

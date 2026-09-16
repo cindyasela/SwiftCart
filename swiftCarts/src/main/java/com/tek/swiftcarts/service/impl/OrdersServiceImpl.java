@@ -1,5 +1,6 @@
 package com.tek.swiftcarts.service.impl;
 
+import com.tek.swiftcarts.dto.OrderItemsDTO;
 import com.tek.swiftcarts.dto.OrderProccessingDTO;
 import com.tek.swiftcarts.dto.OrdersDTO;
 import com.tek.swiftcarts.dto.SystemResponse;
@@ -7,6 +8,7 @@ import com.tek.swiftcarts.exception.AppException;
 import com.tek.swiftcarts.exception.ErrorCodes;
 import com.tek.swiftcarts.model.*;
 import com.tek.swiftcarts.repository.*;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.CartsService;
 import com.tek.swiftcarts.service.OrderHistoryService;
 import com.tek.swiftcarts.service.OrdersService;
@@ -33,15 +35,23 @@ public class OrdersServiceImpl  implements OrdersService {
     private final CartItemsRepository itemsRepository;
     private final CartRepository cartRepository;
     private final  OrderItemsRepository orderItemsRepository;
+    private final ProductRepository productRepository;
 
-    public SystemResponse createStockOrder(OrdersDTO dto){
+    private Users resolveActor(SwiftCartPrincipal principal) {
+
+        return usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
+    }
+
+    public SystemResponse createStockOrder(OrdersDTO dto, SwiftCartPrincipal principal){
 
         Orders order =new Orders();
 
         order.setName(dto.getName());
         order.setNotes(dto.getNotes());
+        order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
-        order.setId(dto.getId());
+        order.setType(dto.getType() != null ? dto.getType() : OrderType.DELIVERY);
 
         Optional<Status>pending=statusRepository.findByName("PENDING");
 
@@ -52,16 +62,11 @@ public class OrdersServiceImpl  implements OrdersService {
         }
         order.setStatus(pending.get());
 
-        Optional<Users>users=usersRepository.findById(dto.getCreatedBy().getId());
+        Users users = resolveActor(principal);
 
-        if (users.isEmpty()){
-            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,
-                    "User is Not Available");
-        }
+        order.setCreatedBy(users);
 
-        order.setCreatedBy(users.get());
-
-        order.setSupportedBy(users.get());
+        order.setSupportedBy(users);
 
         Optional<PaymentStatus>paymentStatus=paymentsStatusRepository.findById(dto.getPaymentStatus().getId());
 
@@ -83,7 +88,7 @@ public class OrdersServiceImpl  implements OrdersService {
         orderHistoryService.registerOrderHistory(
                 order,
                 HistoryOperation.PENDING,
-                users.get(),
+                users,
                 dto.getComments(),
                 dto.getNotes(),
                 dto.getDescription()
@@ -96,14 +101,15 @@ public class OrdersServiceImpl  implements OrdersService {
     }
 
 
-    public SystemResponse createCustomerOrder (OrdersDTO dto){
+    public OrdersDTO createCustomerOrder (OrdersDTO dto, SwiftCartPrincipal principal){
 
         Orders order=new Orders();
 
         order.setName(dto.getName());
         order.setNotes(dto.getNotes());
+        order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
-        order.setId(dto.getId());
+        order.setType(dto.getType() != null ? dto.getType() : OrderType.IN_SHOPPING);
 
         Optional<Status>pending=statusRepository.findByName("PENDING");
 
@@ -114,16 +120,11 @@ public class OrdersServiceImpl  implements OrdersService {
         }
         order.setStatus(pending.get());
 
-        Optional<Users>users=usersRepository.findById(dto.getCreatedBy().getId());
+        Users users = resolveActor(principal);
 
-        if (users.isEmpty()){
-            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,
-                    "User is Not Available");
-        }
+        order.setCreatedBy(users);
 
-        order.setCreatedBy(users.get());
-
-        order.setSupportedBy(users.get());
+        order.setSupportedBy(users);
 
         Optional<PaymentStatus>paymentStatus=paymentsStatusRepository.findById(dto.getPaymentStatus().getId());
 
@@ -142,10 +143,51 @@ public class OrdersServiceImpl  implements OrdersService {
 
         orderRepository.save(order);
 
+        if (dto.getOrderItems() != null && !dto.getOrderItems().isEmpty()) {
+
+            BigDecimal orderTotal = BigDecimal.ZERO;
+
+            List<OrderItems> savedItems = new java.util.ArrayList<>();
+
+            for (OrderItemsDTO itemDto : dto.getOrderItems()) {
+
+                Products product = productRepository.findById(itemDto.getProduct().getId())
+                        .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Product Not Found"));
+
+                BigDecimal unitPrice = itemDto.getUnitPrice() != null
+                        ? itemDto.getUnitPrice()
+                        : BigDecimal.valueOf(product.getSellingPrice());
+
+                BigDecimal total = unitPrice.multiply(BigDecimal.valueOf(itemDto.getQuantity()));
+
+                OrderItems item = new OrderItems();
+                item.setOrder(order);
+                item.setProduct(product);
+                item.setName(product.getName());
+                item.setQuantity(itemDto.getQuantity());
+                item.setUnitPrice(unitPrice);
+                item.setTotal(total);
+                item.setNotes(itemDto.getNotes() != null ? itemDto.getNotes() : "");
+                item.setCreatedAt(LocalDateTime.now());
+                item.setCreatedBy(users);
+                item.setStatus(pending.get());
+
+                orderItemsRepository.save(item);
+                savedItems.add(item);
+
+                orderTotal = orderTotal.add(total);
+            }
+
+            order.setSubtotal(orderTotal);
+            order.setTotalAmount(orderTotal);
+            order.setOrderItems(savedItems);
+            orderRepository.save(order);
+        }
+
         orderHistoryService.registerOrderHistory(
                 order,
                 HistoryOperation.ORDER,
-                users.get(),
+                users,
                 dto.getComments(),
                 dto.getNotes(),
                 dto.getDescription()
@@ -153,19 +195,18 @@ public class OrdersServiceImpl  implements OrdersService {
         );
 
 
-        return new SystemResponse("Ok","Orders Placed Successfully","Your Order Has Been Placed Successfully",ResponseState.SUCCESS);
-
+        return DTOConverters.convertToDTO(order);
     }
 
-    public OrderProccessingDTO processSale(OrderProccessingDTO dto){
+    public OrderProccessingDTO processSale(OrderProccessingDTO dto, SwiftCartPrincipal principal){
 
         Orders order=orderRepository.findById(dto.getId())
                 .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Order Not Found"));
 
 
-       Optional<Users> users=usersRepository.findById(dto.getCreatedBy().getId());
+       Users users = resolveActor(principal);
 
-       if (!users.get().getId().equals(dto.getProcessedBy().getId())){
+       if (!order.getCreatedBy().getId().equals(users.getId())){
            throw new AppException(ErrorCodes.INVALID_REQUEST,
                    "Only the person who created the order can process the sale ");
        }
@@ -201,7 +242,7 @@ public class OrdersServiceImpl  implements OrdersService {
             OrderHistory history= orderHistoryService.registerOrderHistory(
                 order,
                 HistoryOperation.PENDING,
-                users.get(),
+                users,
                 dto.getComments(),
                 dto.getComments(),
                 dto.getRemarks()
@@ -212,7 +253,7 @@ public class OrdersServiceImpl  implements OrdersService {
 
             orderDto.setHistoryDTO(DTOConverters.convertToDTO(history));
             orderDto.setStatus(DTOConverters.convertToDTO(confirmedStatus));
-            orderDto.setProcessedBy(DTOConverters.convertToDTO(users.get()));
+            orderDto.setProcessedBy(DTOConverters.convertToDTO(users));
 
 
 
@@ -232,15 +273,15 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
 }
 
 
-    public OrderProccessingDTO completeOrder(OrderProccessingDTO dto){
+    public OrderProccessingDTO completeOrder(OrderProccessingDTO dto, SwiftCartPrincipal principal){
 
         Orders order=orderRepository.findById(dto.getId())
                 .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Order Not Found"));
 
 
-        Optional<Users> users=usersRepository.findById(dto.getCreatedBy().getId());
+        Users users = resolveActor(principal);
 
-        if (!users.get().getId().equals(dto.getProcessedBy().getId())){
+        if (!order.getCreatedBy().getId().equals(users.getId())){
             throw new AppException(ErrorCodes.INVALID_REQUEST,
                     "Only the person who created the order can process the sale ");
         }
@@ -280,7 +321,7 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
         OrderHistory history= orderHistoryService.registerOrderHistory(
                 order,
                 HistoryOperation.SALE_COMPLETED,
-                users.get(),
+                users,
                 dto.getComments(),
                 dto.getComments(),
                 dto.getRemarks()
@@ -291,12 +332,21 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
 
         orderDto.setHistoryDTO(DTOConverters.convertToDTO(history));
         orderDto.setStatus(DTOConverters.convertToDTO(completeStatus));
-        orderDto.setProcessedBy(DTOConverters.convertToDTO(users.get()));
+        orderDto.setProcessedBy(DTOConverters.convertToDTO(users));
 
 
         return dto;
     }
 
+
+    @Override
+    public List<OrdersDTO> findAll() {
+
+        return orderRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(DTOConverters::convertToDTO)
+                .toList();
+    }
 
     public List<OrdersDTO>fetchOrderByStatus(OrdersDTO dto){
 
@@ -308,7 +358,7 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
     }
 
 
-    public  SystemResponse cartCheckout(String cartId,OrdersDTO dto){
+    public  SystemResponse cartCheckout(String cartId,OrdersDTO dto, SwiftCartPrincipal principal){
 
       Carts carts=cartRepository.findById(cartId) .orElseThrow(() ->
               new AppException(
@@ -319,10 +369,7 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
               new AppException(
                       ErrorCodes.RESOURCE_NOT_FOUND," Status Not Found")) ;
 
-      Users users= usersRepository.findById(dto.getCreatedBy().getId())
-              .orElseThrow(() ->
-              new AppException(
-                      ErrorCodes.RESOURCE_NOT_FOUND," Sorry The User Not Found")) ;
+      Users users = resolveActor(principal);
 
 
       if (carts.getCartItems().isEmpty()) {throw

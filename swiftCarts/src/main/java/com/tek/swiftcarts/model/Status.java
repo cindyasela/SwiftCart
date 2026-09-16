@@ -22,7 +22,9 @@ public class Status {
     @Column(nullable = false,updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne(targetEntity = Users.class,optional = false)
+    // Nullable: breaks the Users<->Status circular NOT NULL dependency (Users.status
+    // is required, so the first Status rows must be seedable before any Users exist).
+    @ManyToOne(targetEntity = Users.class)
     @JoinColumn(name = "created_by")
     Users createdBy;
 

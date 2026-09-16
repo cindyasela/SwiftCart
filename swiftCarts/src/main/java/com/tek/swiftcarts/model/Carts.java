@@ -48,5 +48,9 @@ public class Carts {
     Status status;
 
 
+    @OneToOne(targetEntity = Users.class, optional = false)
+    @JoinColumn(name = "users")
+    Users users;
+
 
 }

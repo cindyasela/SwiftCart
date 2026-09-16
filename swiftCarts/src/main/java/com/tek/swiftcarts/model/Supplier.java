@@ -17,4 +17,11 @@ public class Supplier {
 
     @Column(nullable = false,length = 300)
     private String description;
+
+    // Contact details - not used for anything yet, but this is exactly what
+    // a future "notify supplier when a product goes out of stock" feature
+    // would need, so it's captured here from the start.
+    private String phoneNumber;
+
+    private String email;
 }

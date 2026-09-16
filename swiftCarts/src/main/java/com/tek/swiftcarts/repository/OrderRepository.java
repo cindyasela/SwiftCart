@@ -14,4 +14,6 @@ public interface OrderRepository extends JpaRepository<Orders,String> {
     List<Orders> findOrderByPaymentStatus(PaymentMethodsDTO paymentMethod);
 
     List<Orders> findOrderByStatusName(@Param("name") String name);
+
+    List<Orders> findAllByOrderByCreatedAtDesc();
 }

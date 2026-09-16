@@ -25,6 +25,8 @@ public class Products {
     @Column(nullable = false)
     private LocalDateTime purchasedOn;
 
+    private LocalDateTime lastRestockedAt;
+
     @ManyToOne(targetEntity = Users.class,optional = false)
     @JoinColumn(name = "createdBy")
     private Users createdBy;
@@ -48,11 +50,19 @@ public class Products {
     @JoinColumn(name = "Brand")
     ProductBrand brand;
 
+    // Primary supplier this product is sourced from - nullable since not
+    // every product need be assigned one immediately at registration.
+    @ManyToOne(targetEntity = Supplier.class)
+    @JoinColumn(name = "supplier")
+    private Supplier supplier;
+
     @Column(nullable = false)
     private Double buyingPrice;
 
     @Column(nullable = false)
     private Double sellingPrice;
 
+    @Column(columnDefinition = "TEXT")
+    private String imageBase64;
 
 }

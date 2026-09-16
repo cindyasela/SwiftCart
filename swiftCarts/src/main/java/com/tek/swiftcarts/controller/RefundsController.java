@@ -1,6 +1,7 @@
 package com.tek.swiftcarts.controller;
 
 import com.tek.swiftcarts.dto.RefundsDTO;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.RefundService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,9 +25,9 @@ public class RefundsController {
             description = "Adds new Refund"
     )
     @PostMapping("/register")
-    public ResponseEntity<RefundsDTO>registerNewRefund(@RequestBody RefundsDTO dto){
+    public ResponseEntity<RefundsDTO>registerNewRefund(@RequestBody RefundsDTO dto, SwiftCartPrincipal principal){
 
-        RefundsDTO refunds=refundService.registerRefund(dto);
+        RefundsDTO refunds=refundService.registerRefund(dto, principal);
 
         return ResponseEntity.ok(refunds);
 
@@ -38,9 +39,9 @@ public class RefundsController {
             description = "Approve a refund"
     )
     @PostMapping("/approve")
-    public ResponseEntity<RefundsDTO>approveRefunds(@RequestBody RefundsDTO dto){
+    public ResponseEntity<RefundsDTO>approveRefunds(@RequestBody RefundsDTO dto, SwiftCartPrincipal principal){
 
-        RefundsDTO refunds=refundService.approveRefunds(dto);
+        RefundsDTO refunds=refundService.approveRefunds(dto, principal);
 
         return ResponseEntity.ok(refunds);
 
@@ -51,9 +52,9 @@ public class RefundsController {
             description = "Reject Forwarded Refunds"
     )
     @PostMapping("/reject")
-    public ResponseEntity<RefundsDTO>rejectRefunds(@RequestBody RefundsDTO dto){
+    public ResponseEntity<RefundsDTO>rejectRefunds(@RequestBody RefundsDTO dto, SwiftCartPrincipal principal){
 
-        RefundsDTO refunds=refundService.rejectRefunds(dto);
+        RefundsDTO refunds=refundService.rejectRefunds(dto, principal);
 
         return ResponseEntity.ok(refunds);
 
@@ -64,9 +65,9 @@ public class RefundsController {
             description = "Process A Refunds"
     )
     @PostMapping("/process")
-    public ResponseEntity<RefundsDTO>processRefunds(@RequestBody RefundsDTO dto){
+    public ResponseEntity<RefundsDTO>processRefunds(@RequestBody RefundsDTO dto, SwiftCartPrincipal principal){
 
-        RefundsDTO refundsDTO=refundService.processRefunds(dto);
+        RefundsDTO refundsDTO=refundService.processRefunds(dto, principal);
 
         return ResponseEntity.ok(refundsDTO);
     }

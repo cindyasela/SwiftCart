@@ -14,4 +14,6 @@ public interface RefundRepository  extends JpaRepository<Refunds,String> {
     List<Refunds> findRefundByStatusName(RefundStatus status);
 
     List<Refunds> findRefundByOrderId(String id);
+
+    List<Refunds> findAllByOrderByCreatedAtDesc();
 }

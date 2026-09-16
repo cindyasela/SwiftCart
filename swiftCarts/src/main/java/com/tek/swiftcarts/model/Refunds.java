@@ -15,7 +15,7 @@ public class Refunds {
     private String id;
 
     @ManyToOne(targetEntity = Orders.class)
-    @JoinColumn(name = "order", nullable = false)
+    @JoinColumn(name = "order_id", nullable = false)
     private Orders order;
 
     @Column(nullable = false)

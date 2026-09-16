@@ -6,6 +6,7 @@ import com.tek.swiftcarts.exception.AppException;
 import com.tek.swiftcarts.exception.ErrorCodes;
 import com.tek.swiftcarts.model.*;
 import com.tek.swiftcarts.repository.*;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.ShipmentsService;
 import com.tek.swiftcarts.utils.DTOConverters;
 import lombok.AllArgsConstructor;
@@ -25,27 +26,24 @@ public class ShipmentsServiceImpl implements ShipmentsService {
     private final DeliveryTypeRepository typeRepository;
     private final StatusRepository statusRepository;
 
+    private Users resolveActor(SwiftCartPrincipal principal) {
 
-    public SystemResponse createNewDelivery(ShipmentsDTO dto) {
+        return usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
+    }
+
+    public SystemResponse createNewDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal) {
 
         Shipments shipments = new Shipments();
 
-        shipments.setId(dto.getId());
         shipments.setNotes(dto.getNotes());
+        shipments.setCreatedAt(LocalDateTime.now());
         shipments.setDispatchedAt(LocalDateTime.now());
         shipments.setShipmentStatus(ShipmentStatus.PENDING);
         shipments.setUpdatedAt(LocalDateTime.now());
         shipments.setReason(dto.getNotes());
 
-        Optional<Users> users = usersRepository.findById(dto.getEntryBy().getId());
-
-        if (users.isEmpty()) {
-            throw new AppException(
-                    ErrorCodes.RESOURCE_NOT_FOUND,
-                    "Users Not Found");
-        }
-
-        shipments.setEntryBy(users.get());
+        shipments.setEntryBy(resolveActor(principal));
 
         Optional<Orders> orders = orderRepository.findById(dto.getOrders().getId());
 
@@ -57,6 +55,19 @@ public class ShipmentsServiceImpl implements ShipmentsService {
         shipments.setDispatchedAt(LocalDateTime.now());
         shipments.setReason(dto.getReason());
 
+        if (dto.getDeliveryType() == null || dto.getDeliveryType().getId() == null) {
+            throw new AppException(ErrorCodes.INVALID_REQUEST, "Delivery Type Is Required");
+        }
+
+        DeliveryType deliveryType = typeRepository.findById(dto.getDeliveryType().getId())
+                .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Delivery Type Not Found"));
+
+        shipments.setDeliveryType(deliveryType);
+
+        Status pending = statusRepository.findByName("PENDING")
+                .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Pending Status Not Found"));
+
+        shipments.setStatus(pending);
 
         shipmentsRepository.save(shipments);
 
@@ -67,7 +78,7 @@ public class ShipmentsServiceImpl implements ShipmentsService {
 
     }
 
-    public SystemResponse dispatchDelivery(ShipmentsDTO dto) {
+    public SystemResponse dispatchDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal) {
 
         Shipments shipment = shipmentsRepository.findById(dto.getId()).orElseThrow(() -> new AppException(
                         ErrorCodes.RESOURCE_NOT_FOUND,
@@ -76,13 +87,10 @@ public class ShipmentsServiceImpl implements ShipmentsService {
         shipment.setDeliveryNo(dto.getDeliveryNo());
         shipment.setShipmentStatus(ShipmentStatus.DISPATCHED);
         shipment.setDispatchedAt(LocalDateTime.now());
+        shipment.setUpdatedAt(LocalDateTime.now());
         shipment.setReason(dto.getReason());
 
-        Users user = usersRepository.findById(dto.getEntryBy().getId()).orElseThrow(() -> new AppException(
-                        ErrorCodes.RESOURCE_NOT_FOUND,
-                        "User not found"));
-
-        shipment.setEntryBy(user);
+        shipment.setEntryBy(resolveActor(principal));
 
         DeliveryType deliveryType = typeRepository.findById(dto.getDeliveryType().getId()).orElseThrow(() -> new AppException(
                         ErrorCodes.RESOURCE_NOT_FOUND,
@@ -107,7 +115,7 @@ public class ShipmentsServiceImpl implements ShipmentsService {
         return new SystemResponse("Done","Shipment id"+shipment.getId(),"Successfully Dispatched",ResponseState.SUCCESS);
     }
 
-    public SystemResponse deliverShipments(ShipmentsDTO dto){
+    public SystemResponse deliverShipments(ShipmentsDTO dto, SwiftCartPrincipal principal){
 
         Shipments shipments=shipmentsRepository.findById(dto.getId()).orElseThrow(() -> new AppException(
               ErrorCodes.RESOURCE_NOT_FOUND,"Shipments Not Found"));
@@ -130,12 +138,9 @@ public class ShipmentsServiceImpl implements ShipmentsService {
                     new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Delivery Type Not Found"));
 
 
-    Users users=usersRepository.findById(dto.getEntryBy().getId()).orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Users Not Found"));
-
-    shipments.setEntryBy(users);
+    shipments.setEntryBy(resolveActor(principal));
 
     shipments.setUpdatedAt(LocalDateTime.now());
-    shipments.setCreatedAt(LocalDateTime.now());
     shipments.setReason(dto.getReason());
 
     shipmentsRepository.save(shipments);
@@ -156,5 +161,13 @@ public class ShipmentsServiceImpl implements ShipmentsService {
 
     }
 
+    @Override
+    public List<ShipmentsDTO> findAll() {
+
+        return shipmentsRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(DTOConverters::convertToDTO)
+                .toList();
+    }
 
 }

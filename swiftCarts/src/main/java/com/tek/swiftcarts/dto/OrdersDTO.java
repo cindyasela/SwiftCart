@@ -1,12 +1,10 @@
 package com.tek.swiftcarts.dto;
 
-import com.tek.swiftcarts.model.CartItems;
-import com.tek.swiftcarts.model.OrderItems;
 import com.tek.swiftcarts.model.OrderType;
-import com.tek.swiftcarts.model.Products;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,9 +22,13 @@ public class OrdersDTO {
     private StatusDTO status;
     private UsersDTO createdBy;
     private UsersDTO updatedBy;
+    private OrderType type;
     private PaymentMethodsDTO paymentMethod;
     private PaymentStatusDTO paymentStatus;
     private List<PaymentsDTO> payments;
+    private List<OrderItemsDTO> orderItems;
+    private BigDecimal totalAmount;
+    private BigDecimal subtotal;
     private String comments;
 
 

@@ -10,4 +10,6 @@ import java.util.List;
 public interface ShipmentsRepository extends JpaRepository <Shipments,String> {
 
     List<Shipments> findShipmentByStatusId(String id);
+
+    List<Shipments> findAllByOrderByCreatedAtDesc();
 }

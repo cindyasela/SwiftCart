@@ -9,7 +9,10 @@ import com.tek.swiftcarts.model.Users;
 import com.tek.swiftcarts.repository.StatusRepository;
 import com.tek.swiftcarts.repository.SupplierRepository;
 import com.tek.swiftcarts.repository.UsersRepository;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.ProductCategoriesService;
+import com.tek.swiftcarts.exception.AppException;
+import com.tek.swiftcarts.exception.ErrorCodes;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +28,7 @@ public class ProductCategoriesServiceImpl implements ProductCategoriesService {
      private final SupplierRepository supplierRepository;
 
 
-    public SystemResponse ProductCategoriesDTO(ProductCategoriesDTO dto){
+    public SystemResponse ProductCategoriesDTO(ProductCategoriesDTO dto, SwiftCartPrincipal principal){
 
         ProductCategories categories=new ProductCategories();
 
@@ -35,9 +38,10 @@ public class ProductCategoriesServiceImpl implements ProductCategoriesService {
 
         categories.setUpdatedAt(LocalDateTime.now());
 
-        Optional<Users>users=usersRepository.findById(dto.getCreatedBy().getId());
+        Users user = usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
 
-        categories.setCreatedBy(users.get());
+        categories.setCreatedBy(user);
 
        Optional <Status>activeStatus=statusRepository.findByName("Active");
 

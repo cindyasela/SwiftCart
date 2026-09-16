@@ -1,9 +1,11 @@
 package com.tek.swiftcarts.controller;
 
 
+import com.tek.swiftcarts.dto.BestSellerDTO;
 import com.tek.swiftcarts.dto.ProductDTO;
 import com.tek.swiftcarts.dto.ProductMetricsDTO;
 import com.tek.swiftcarts.dto.SystemResponse;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.ProductsService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
@@ -22,9 +24,9 @@ public class ProductController {
     private final ProductsService productsService;
 
     @PostMapping("/new")
-    public ResponseEntity<SystemResponse>registerProducts(@RequestBody ProductDTO dto){
+    public ResponseEntity<SystemResponse>registerProducts(@RequestBody ProductDTO dto, SwiftCartPrincipal principal){
 
-        SystemResponse products=productsService.registerProducts(dto);
+        SystemResponse products=productsService.registerProducts(dto, principal);
 
         return ResponseEntity.ok(products);
 
@@ -63,6 +65,14 @@ public class ProductController {
 
         return ResponseEntity.ok(dto);
 
+    }
+
+    @GetMapping("/best-sellers")
+    public ResponseEntity<List<BestSellerDTO>> getBestSellers(){
+
+        List<BestSellerDTO> bestSellers = productsService.getBestSellers();
+
+        return ResponseEntity.ok(bestSellers);
     }
 
 }

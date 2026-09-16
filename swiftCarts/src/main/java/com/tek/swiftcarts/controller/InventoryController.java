@@ -2,6 +2,7 @@ package com.tek.swiftcarts.controller;
 
 import com.tek.swiftcarts.dto.InventoryDTO;
 import com.tek.swiftcarts.dto.SystemResponse;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.InventoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,8 +29,8 @@ public class InventoryController {
             description = "Adds new inventory stock into the system"
     )
     @PostMapping("register")
-    public ResponseEntity<SystemResponse>addNewStock(@RequestBody InventoryDTO dto){
-        SystemResponse inventoryDTO=inventoryService.createInventory(dto);
+    public ResponseEntity<SystemResponse>addNewStock(@RequestBody InventoryDTO dto, SwiftCartPrincipal principal){
+        SystemResponse inventoryDTO=inventoryService.createInventory(dto, principal);
         return  ResponseEntity.ok(inventoryDTO);
 
     }
@@ -43,6 +44,16 @@ public class InventoryController {
         List<InventoryDTO> dto=inventoryService.fetchAllStock();
         return ResponseEntity.ok(dto);
 
+    }
+
+    @Operation(
+            summary = "Delete an inventory entry",
+            description = "Removes a single inventory stock entry from the system"
+    )
+    @DeleteMapping("/{id}")
+    public ResponseEntity<SystemResponse> deleteInventory(@PathVariable String id){
+        SystemResponse response = inventoryService.deleteInventory(id);
+        return ResponseEntity.ok(response);
     }
 
 

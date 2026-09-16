@@ -27,8 +27,10 @@ public class Payments {
     @JoinColumn(name = "PaymentMethods")
     PaymentMethods paymentMethods;
 
-    @Column(updatable = false)
     private String operatorReceipt;
+
+    @Column(updatable = false)
+    private String checkoutRequestId;
 
     @Column(nullable = false)
     private LocalDateTime paidAt;
@@ -44,8 +46,10 @@ public class Payments {
     Users receivedBy;
 
     @ManyToOne
-    @JoinColumn(name = "order")
+    @JoinColumn(name = "order_id")
     private Orders order;
 
+    @Column(nullable = false, unique = true, updatable = false)
+    private String transactionId;
 
 }

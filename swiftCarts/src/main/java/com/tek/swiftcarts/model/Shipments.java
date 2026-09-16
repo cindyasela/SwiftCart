@@ -36,17 +36,16 @@ public class Shipments {
     private LocalDateTime createdAt;
 
     @ManyToOne(targetEntity = Users.class)
-    @JoinColumn(name = "entryBy",nullable = false,updatable = false)
+    @JoinColumn(name = "entryBy",nullable = false)
     Users entryBy;
 
     @Column(nullable = false)
     private String notes;
 
     @ManyToOne(targetEntity = Status.class)
-    @JoinColumn(name = "status",updatable = false)
+    @JoinColumn(name = "status")
     Status status;
 
-    @Column(updatable = false)
     private LocalDateTime dispatchedAt;
 
     private String reason;

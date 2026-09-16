@@ -3,6 +3,7 @@ package com.tek.swiftcarts.controller;
 
 import com.tek.swiftcarts.dto.ShipmentsDTO;
 import com.tek.swiftcarts.dto.SystemResponse;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.ShipmentsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,9 +29,9 @@ public class DeliveryController {
     @Operation(summary = "Enter A Delivery",
             description= "Register New Delivery")
     @PostMapping("/new")
-    public ResponseEntity<SystemResponse>createNewDelivery(ShipmentsDTO dto){
+    public ResponseEntity<SystemResponse>createNewDelivery(@RequestBody ShipmentsDTO dto, SwiftCartPrincipal principal){
 
-        SystemResponse newDelivery=shipmentsService.createNewDelivery(dto);
+        SystemResponse newDelivery=shipmentsService.createNewDelivery(dto, principal);
 
         return ResponseEntity.ok(newDelivery);
 
@@ -38,22 +40,24 @@ public class DeliveryController {
     @Operation(summary = "Dispatch Delivery",
             description= "Dispatch An Order")
     @PostMapping("/dispatch")
-    public ResponseEntity<SystemResponse>dispatchDelivery(ShipmentsDTO dto){
+    public ResponseEntity<SystemResponse>dispatchDelivery(@RequestBody ShipmentsDTO dto, SwiftCartPrincipal principal){
 
-        SystemResponse dispatchedDelivery=shipmentsService.dispatchDelivery(dto);
+        SystemResponse dispatchedDelivery=shipmentsService.dispatchDelivery(dto, principal);
 
         return ResponseEntity.ok(dispatchedDelivery);
     }
 
+
     @Operation(summary = "Ship a Delivery",
             description= "Release the Order")
     @PostMapping("/Ship")
-    public ResponseEntity<SystemResponse>deliverShipments(ShipmentsDTO dto){
+    public ResponseEntity<SystemResponse>deliverShipments(@RequestBody ShipmentsDTO dto, SwiftCartPrincipal principal){
 
-        SystemResponse deliveredGoods=shipmentsService.deliverShipments(dto);
+        SystemResponse deliveredGoods=shipmentsService.deliverShipments(dto, principal);
 
         return ResponseEntity.ok(deliveredGoods);
     }
+
 
     @Operation(summary = "Fetch Delivery By Status",
             description= "Get Delivery")
@@ -63,6 +67,16 @@ public class DeliveryController {
         List <ShipmentsDTO>shipments=shipmentsService.findShipmentsByStatus(dto);
 
         return  ResponseEntity.ok(shipments);
+    }
+
+    @Operation(summary = "Fetch All Shipments",
+            description = "Get all shipments in the system")
+    @GetMapping("/all")
+    public ResponseEntity<List<ShipmentsDTO>> findAll(){
+
+        List<ShipmentsDTO> shipments = shipmentsService.findAll();
+
+        return ResponseEntity.ok(shipments);
     }
 
 

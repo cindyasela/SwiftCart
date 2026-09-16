@@ -24,10 +24,10 @@ public class OrderHistoryServiceImpl implements OrderHistoryService {
 
         OrderHistory history=new OrderHistory();
 
-        history.setNotes(notes);
+        history.setNotes(notes != null ? notes : "");
         history.setCreatedAt(LocalDateTime.now());
         history.setOrders(order);
-        history.setDescription(description);
+        history.setDescription(description != null ? description : "");
         history.setComment(comment);
         history.setOperation(operation);
         history.setEntryBy(entryBy);

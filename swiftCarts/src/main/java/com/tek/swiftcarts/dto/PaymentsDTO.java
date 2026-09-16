@@ -21,6 +21,9 @@ public class PaymentsDTO {
     private LocalDateTime createdAt;
     private String notes;
     private UsersDTO receivedBy;
+    private OrdersDTO order;
+    private String transactionId;
+    private String checkoutRequestId;
 
 
 }

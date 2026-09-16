@@ -48,13 +48,10 @@ public class Users {
     @Column(nullable = false)
     private String email;
 
-    @OneToOne(targetEntity = Carts.class, optional = false)
-    @JoinColumn(name = "carts")
-    Carts carts;
+
 
     @Column(length = 12)
     private String phoneNumber;
-
 
 
 }

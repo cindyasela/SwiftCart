@@ -1,5 +1,6 @@
 package com.tek.swiftcarts.service.impl;
 
+import com.tek.swiftcarts.dto.BestSellerDTO;
 import com.tek.swiftcarts.dto.ProductBrandDTO;
 import com.tek.swiftcarts.dto.ProductDTO;
 import com.tek.swiftcarts.dto.ProductMetricsDTO;
@@ -9,10 +10,16 @@ import com.tek.swiftcarts.exception.ErrorCodes;
 import com.tek.swiftcarts.model.ProductCategories;
 import com.tek.swiftcarts.model.Products;
 import com.tek.swiftcarts.model.ResponseState;
+import com.tek.swiftcarts.model.Status;
+import com.tek.swiftcarts.model.Supplier;
 import com.tek.swiftcarts.model.Users;
+import com.tek.swiftcarts.repository.OrderItemsRepository;
 import com.tek.swiftcarts.repository.ProductCategoriesRepository;
 import com.tek.swiftcarts.repository.ProductRepository;
+import com.tek.swiftcarts.repository.StatusRepository;
+import com.tek.swiftcarts.repository.SupplierRepository;
 import com.tek.swiftcarts.repository.UsersRepository;
+import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.ProductsService;
 import com.tek.swiftcarts.utils.DTOConverters;
 import lombok.AllArgsConstructor;
@@ -29,27 +36,45 @@ public class ProductsServiceImpl implements ProductsService {
     private final UsersRepository usersRepository;
     private final ProductCategoriesRepository categoriesRepository;
     private final ProductRepository productRepository;
+    private final StatusRepository statusRepository;
+    private final SupplierRepository supplierRepository;
+    private final OrderItemsRepository orderItemsRepository;
 
 
-    public SystemResponse registerProducts(ProductDTO dto){
+    public SystemResponse registerProducts(ProductDTO dto, SwiftCartPrincipal principal){
 
         Products products=new Products();
 
-        products.setId(dto.getId());
         products.setName(dto.getName());
         products.setPurchasedOn(LocalDateTime.now());
         products.setSKUNumber(dto.getSkuNumber());
         products.setNumberOfProducts(dto.getNumberOfProducts());
+        products.setBuyingPrice(dto.getBuyingPrice());
+        products.setSellingPrice(dto.getSellingPrice());
+        products.setImageBase64(dto.getImageBase64());
 
-        Optional<Users>users=usersRepository.findById(dto.getCreatedBy().getId());
+        Users user = usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
+        products.setCreatedBy(user);
+        products.setUpdatedBy(user);
 
-        users.ifPresent(products::setCreatedBy);
+        ProductCategories categories = categoriesRepository.findById(dto.getCategory().getId())
+                .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Product Category Not Found"));
+        products.setCategory(categories);
 
-        Optional<ProductCategories>categories=categoriesRepository.findById(dto.getCategory().getId());
+        // Optional - a product can be registered before a supplier is
+        // assigned to it.
+        if (dto.getSupplier() != null && dto.getSupplier().getId() != null) {
+            Supplier supplier = supplierRepository.findById(dto.getSupplier().getId())
+                    .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Supplier Not Found"));
+            products.setSupplier(supplier);
+        }
 
-        categories.ifPresent(products::setCategory);
+        Status active = statusRepository.findByName("ACTIVE")
+                .orElseThrow(() -> new AppException(ErrorCodes.INTERNAL_ERROR, "ACTIVE status not seeded"));
+        products.setStatus(active);
 
-        users.ifPresent(products::setUpdatedBy);
+        productRepository.save(products);
 
         return new SystemResponse("200","Your Product is Registered Successfully","Products is Saved", ResponseState.SUCCESS);
 
@@ -75,7 +100,6 @@ public class ProductsServiceImpl implements ProductsService {
                 .toList();    }
 
 
-    
 
     public List<ProductDTO>findProductByCategory(ProductDTO dto){
 
@@ -85,6 +109,18 @@ public class ProductsServiceImpl implements ProductsService {
                 .map(DTOConverters::convertToDTO)
                 .toList();
 
+    }
+
+    public List<BestSellerDTO> getBestSellers() {
+
+        return orderItemsRepository.findBestSellers()
+                .stream()
+                .map(row -> new BestSellerDTO(
+                        row.getProductId(),
+                        row.getProductName(),
+                        row.getUnitsSold(),
+                        row.getRevenue()))
+                .toList();
     }
 
     public ProductMetricsDTO getProductMetrics(){
@@ -101,7 +137,7 @@ public class ProductsServiceImpl implements ProductsService {
 
     }
 
-    public ProductDTO updateProducts(ProductDTO dto){
+    public ProductDTO updateProducts(ProductDTO dto, SwiftCartPrincipal principal){
 
         Products products=productRepository.findById(dto.getId())
                 .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Product Not Found"));
@@ -111,15 +147,21 @@ public class ProductsServiceImpl implements ProductsService {
         products.setSKUNumber(dto.getSkuNumber());
         products.setNumberOfProducts(dto.getNumberOfProducts());
 
-        Optional<Users>users=usersRepository.findById(dto.getCreatedBy().getId());
+        Users user = usersRepository.findByKeyCloakId(principal.getKeyCloakId())
+                .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
 
-        users.ifPresent(products::setCreatedBy);
+        products.setCreatedBy(user);
 
         Optional<ProductCategories>categories=categoriesRepository.findById(dto.getCategory().getId());
 
         categories.ifPresent(products::setCategory);
 
-        users.ifPresent(products::setUpdatedBy);
+        if (dto.getSupplier() != null && dto.getSupplier().getId() != null) {
+            supplierRepository.findById(dto.getSupplier().getId())
+                    .ifPresent(products::setSupplier);
+        }
+
+        products.setUpdatedBy(user);
 
 
         return dto;

@@ -41,7 +41,6 @@ public class Orders {
     @Column(nullable = false)
     private OrderType type;
 
-    @Column(nullable = false)
     private LocalDateTime closedAt;
 
 
