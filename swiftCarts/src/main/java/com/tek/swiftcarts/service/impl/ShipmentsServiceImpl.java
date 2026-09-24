@@ -37,7 +37,7 @@ public class ShipmentsServiceImpl implements ShipmentsService {
         return String.format("SHP-%s-%04d", orderNo, randomPart);
     }
 
-    public SystemResponse createNewDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal) {
+    public ShipmentsDTO createNewDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal) {
 
         Shipments shipments = new Shipments();
 
