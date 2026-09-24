@@ -154,6 +154,13 @@ public class OrdersServiceImpl  implements OrdersService {
                 Products product = productRepository.findById(itemDto.getProduct().getId())
                         .orElseThrow(() -> new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Product Not Found"));
 
+                if (product.getNumberOfProducts() < itemDto.getQuantity()) {
+                    throw new AppException(
+                            ErrorCodes.INVALID_REQUEST,
+                            "Sorry not enough product for this action. Available: " + product.getNumberOfProducts()
+                    );
+                }
+
                 BigDecimal unitPrice = itemDto.getUnitPrice() != null
                         ? itemDto.getUnitPrice()
                         : BigDecimal.valueOf(product.getSellingPrice());
@@ -376,8 +383,14 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
               new AppException(
                       ErrorCodes.INVALID_REQUEST,"You Cannot Checkout An Empty Cart");}
 
-
-
+      for (CartItems cartItem : carts.getCartItems()) {
+          if (cartItem.getProduct().getNumberOfProducts() < cartItem.getQuantity()) {
+              throw new AppException(
+                      ErrorCodes.INVALID_REQUEST,
+                      "Sorry not enough product for this action. Available: " + cartItem.getProduct().getNumberOfProducts()
+              );
+          }
+      }
 
         Orders order=new Orders();
 
