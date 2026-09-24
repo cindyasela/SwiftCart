@@ -32,25 +32,14 @@ public class ShipmentsServiceImpl implements ShipmentsService {
                 .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
     }
 
-    private String generateShipmentNumber() {
-        long timestamp = System.currentTimeMillis();
+    private String generateShipmentNumber(String orderNo) {
         int randomPart = (int)(Math.random() * 10000);
-        return String.format("SHP-%d-%04d", timestamp, randomPart);
+        return String.format("SHP-%s-%04d", orderNo, randomPart);
     }
 
     public SystemResponse createNewDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal) {
 
         Shipments shipments = new Shipments();
-
-        shipments.setNotes(dto.getNotes());
-        shipments.setCreatedAt(LocalDateTime.now());
-        shipments.setDispatchedAt(LocalDateTime.now());
-        shipments.setShipmentStatus(ShipmentStatus.PENDING);
-        shipments.setUpdatedAt(LocalDateTime.now());
-        shipments.setReason(dto.getNotes());
-        shipments.setDeliveryNo(generateShipmentNumber());
-
-        shipments.setEntryBy(resolveActor(principal));
 
         Optional<Orders> orders = orderRepository.findById(dto.getOrders().getId());
 
@@ -59,6 +48,16 @@ public class ShipmentsServiceImpl implements ShipmentsService {
         }
 
         shipments.setOrders(orders.get());
+
+        shipments.setNotes(dto.getNotes());
+        shipments.setCreatedAt(LocalDateTime.now());
+        shipments.setDispatchedAt(LocalDateTime.now());
+        shipments.setShipmentStatus(ShipmentStatus.PENDING);
+        shipments.setUpdatedAt(LocalDateTime.now());
+        shipments.setReason(dto.getNotes());
+        shipments.setDeliveryNo(generateShipmentNumber(orders.get().getName()));
+
+        shipments.setEntryBy(resolveActor(principal));
         shipments.setDispatchedAt(LocalDateTime.now());
         shipments.setReason(dto.getReason());
 
