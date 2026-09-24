@@ -32,6 +32,12 @@ public class ShipmentsServiceImpl implements ShipmentsService {
                 .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
     }
 
+    private String generateShipmentNumber() {
+        long timestamp = System.currentTimeMillis();
+        int randomPart = (int)(Math.random() * 10000);
+        return String.format("SHP-%d-%04d", timestamp, randomPart);
+    }
+
     public SystemResponse createNewDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal) {
 
         Shipments shipments = new Shipments();
@@ -42,6 +48,7 @@ public class ShipmentsServiceImpl implements ShipmentsService {
         shipments.setShipmentStatus(ShipmentStatus.PENDING);
         shipments.setUpdatedAt(LocalDateTime.now());
         shipments.setReason(dto.getNotes());
+        shipments.setDeliveryNo(generateShipmentNumber());
 
         shipments.setEntryBy(resolveActor(principal));
 
