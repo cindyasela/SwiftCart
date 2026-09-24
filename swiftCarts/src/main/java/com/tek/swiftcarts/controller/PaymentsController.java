@@ -37,4 +37,13 @@ public class PaymentsController {
 
         return ResponseEntity.ok(payments);
     }
+
+    @Operation(summary = "Check payment status with operator", description = "Query M-Pesa to check if a pending payment has been completed and update its status")
+    @PostMapping("/{paymentId}/check-status")
+    public ResponseEntity<PaymentsDTO> checkPaymentStatus(@PathVariable String paymentId) {
+
+        PaymentsDTO payment = paymentsService.checkPaymentStatusWithOperator(paymentId);
+
+        return ResponseEntity.ok(payment);
+    }
 }

@@ -12,7 +12,7 @@ import java.util.List;
 public interface
 ProductsService {
 
-    SystemResponse registerProducts(ProductDTO dto, SwiftCartPrincipal principal);
+    ProductDTO registerProducts(ProductDTO dto, SwiftCartPrincipal principal);
 
     List<ProductDTO> findAll();
 

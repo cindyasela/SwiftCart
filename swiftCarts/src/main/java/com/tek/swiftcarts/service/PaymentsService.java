@@ -12,4 +12,6 @@ public interface PaymentsService {
 
     List<PaymentsDTO> findAll();
 
+    PaymentsDTO checkPaymentStatusWithOperator(String paymentId);
+
 }

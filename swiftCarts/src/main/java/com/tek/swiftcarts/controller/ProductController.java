@@ -24,9 +24,9 @@ public class ProductController {
     private final ProductsService productsService;
 
     @PostMapping("/new")
-    public ResponseEntity<SystemResponse>registerProducts(@RequestBody ProductDTO dto, SwiftCartPrincipal principal){
+    public ResponseEntity<ProductDTO>registerProducts(@RequestBody ProductDTO dto, SwiftCartPrincipal principal){
 
-        SystemResponse products=productsService.registerProducts(dto, principal);
+        ProductDTO products=productsService.registerProducts(dto, principal);
 
         return ResponseEntity.ok(products);
 

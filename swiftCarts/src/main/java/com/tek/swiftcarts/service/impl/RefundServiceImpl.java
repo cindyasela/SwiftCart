@@ -35,9 +35,9 @@ public class RefundServiceImpl implements RefundService {
                 .orElseThrow(() -> new AppException(ErrorCodes.USER_NOT_FOUND));
     }
 
-    public RefundsDTO registerRefund(RefundsDTO dto, SwiftCartPrincipal principal){
+    public RefundsDTO registerRefund(RefundsDTO dto, SwiftCartPrincipal principal) {
 
-        Refunds refunds =new Refunds();
+        Refunds refunds = new Refunds();
 
         refunds.setAmount(dto.getAmount());
         refunds.setCreatedAt(LocalDateTime.now());
@@ -46,17 +46,21 @@ public class RefundServiceImpl implements RefundService {
 
         refunds.setCreatedBy(resolveActor(principal));
 
-        Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
+        Optional<Orders> orders = orderRepository.findById(dto.getOrder().getId());
 
-        if (orders.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Order Not Found");}
+        if (orders.isEmpty()) {
+            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Order Not Found");
+        }
 
         refunds.setOrder(orders.get());
 
         refunds.setProcessedAt(dto.getProcessedAt());
 
-        Optional<Status>pendingStatus=statusRepository.findByName("PENDING");
+        Optional<Status> pendingStatus = statusRepository.findByName("PENDING");
 
-        if (pendingStatus.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Pending status not found");}
+        if (pendingStatus.isEmpty()) {
+            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Pending status not found");
+        }
 
         refunds.setStatus(pendingStatus.get());
 
@@ -67,7 +71,7 @@ public class RefundServiceImpl implements RefundService {
         return dto;
     }
 
-    public RefundsDTO approveRefunds (RefundsDTO dto, SwiftCartPrincipal principal){
+    public RefundsDTO approveRefunds(RefundsDTO dto, SwiftCartPrincipal principal) {
 
         Refunds refunds = refundRepository.findById(dto.getId())
                 .orElseThrow(() ->
@@ -83,17 +87,21 @@ public class RefundServiceImpl implements RefundService {
 
         refunds.setCreatedBy(resolveActor(principal));
 
-        Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
+        Optional<Orders> orders = orderRepository.findById(dto.getOrder().getId());
 
-        if (orders.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Order Not Found");}
+        if (orders.isEmpty()) {
+            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Order Not Found");
+        }
 
         refunds.setOrder(orders.get());
 
         refunds.setProcessedAt(dto.getProcessedAt());
 
-        Optional<Status>approvedStatus=statusRepository.findByName("APPROVED");
+        Optional<Status> approvedStatus = statusRepository.findByName("APPROVED");
 
-        if (approvedStatus.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Pending status not found");}
+        if (approvedStatus.isEmpty()) {
+            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Pending status not found");
+        }
 
         refunds.setStatus(approvedStatus.get());
 
@@ -103,9 +111,9 @@ public class RefundServiceImpl implements RefundService {
 
     }
 
-    public List<RefundsDTO>fetchAllRefunds(){
+    public List<RefundsDTO> fetchAllRefunds() {
 
-        List<Refunds>refunds=refundRepository.findAllByOrderByCreatedAtDesc();
+        List<Refunds> refunds = refundRepository.findAllByOrderByCreatedAtDesc();
 
         return refunds.stream()
                 .map(DTOConverters::convertToDTO)
@@ -113,8 +121,7 @@ public class RefundServiceImpl implements RefundService {
     }
 
 
-
-    public RefundsDTO rejectRefunds (RefundsDTO dto, SwiftCartPrincipal principal){
+    public RefundsDTO rejectRefunds(RefundsDTO dto, SwiftCartPrincipal principal) {
 
         Refunds refunds = refundRepository.findById(dto.getId())
                 .orElseThrow(() ->
@@ -130,17 +137,21 @@ public class RefundServiceImpl implements RefundService {
 
         refunds.setCreatedBy(resolveActor(principal));
 
-        Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
+        Optional<Orders> orders = orderRepository.findById(dto.getOrder().getId());
 
-        if (orders.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Order Not Found");}
+        if (orders.isEmpty()) {
+            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Order Not Found");
+        }
 
         refunds.setOrder(orders.get());
 
         refunds.setProcessedAt(dto.getProcessedAt());
 
-        Optional<Status>rejectedStatus=statusRepository.findByName("REJECTED");
+        Optional<Status> rejectedStatus = statusRepository.findByName("REJECTED");
 
-        if (rejectedStatus.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"REJECTED status not found");}
+        if (rejectedStatus.isEmpty()) {
+            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "REJECTED status not found");
+        }
 
         refunds.setStatus(rejectedStatus.get());
 
@@ -151,9 +162,7 @@ public class RefundServiceImpl implements RefundService {
     }
 
 
-
-
-    public RefundsDTO processRefunds (RefundsDTO dto, SwiftCartPrincipal principal){
+    public RefundsDTO processRefunds(RefundsDTO dto, SwiftCartPrincipal principal) {
 
         Refunds refunds = refundRepository.findById(dto.getId())
                 .orElseThrow(() ->
@@ -169,44 +178,51 @@ public class RefundServiceImpl implements RefundService {
 
         refunds.setCreatedBy(resolveActor(principal));
 
-        Optional<Orders>orders=orderRepository.findById(dto.getOrder().getId());
+        Optional<Orders> orders = orderRepository.findById(dto.getOrder().getId());
 
-        if (orders.isEmpty()){throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND,"Order Not Found");}
+        if (orders.isEmpty()) {
+            throw new AppException(ErrorCodes.RESOURCE_NOT_FOUND, "Order Not Found");
+        }
 
-        Optional<Status>cancelledStatus=statusRepository.findByName("CANCELLED");
+        Optional<Status> cancelledStatus = statusRepository.findByName("CANCELLED");
 
-        if (cancelledStatus.isEmpty()){
+        if (cancelledStatus.isEmpty()) {
             throw new
                     AppException(ErrorCodes.RESOURCE_NOT_FOUND,
-                    "CANCELLED status not found");}
+                    "CANCELLED status not found");
+        }
 
-        if (!orders.get().getStatus().equals(cancelledStatus.get())){
+        if (!orders.get().getStatus().equals(cancelledStatus.get())) {
             throw new
                     AppException(ErrorCodes.INVALID_REQUEST,
-                    "The Orders Must Be Cancelled");}
+                    "The Orders Must Be Cancelled");
+        }
 
         refunds.setOrder(orders.get());
 
         refunds.setProcessedAt(dto.getProcessedAt());
 
-        Optional<Status>approvedStatus=statusRepository.findByName("APPROVED");
+        Optional<Status> approvedStatus = statusRepository.findByName("APPROVED");
 
-        if (approvedStatus.isEmpty()){
+        if (approvedStatus.isEmpty()) {
             throw new
                     AppException(ErrorCodes.RESOURCE_NOT_FOUND,
-                    "APPROVED status not found");}
+                    "APPROVED status not found");
+        }
 
-        if (!refunds.getStatus().equals(approvedStatus.get())){throw new
-                AppException(ErrorCodes.INVALID_REQUEST,
-                "You Cannot Process A Refund that is Not Approved");}
+        if (!refunds.getStatus().equals(approvedStatus.get())) {
+            throw new
+                    AppException(ErrorCodes.INVALID_REQUEST,
+                    "You Cannot Process A Refund that is Not Approved");
+        }
 
-        Optional<Status>processedStatus=statusRepository.findByName("PROCESSED");
+        Optional<Status> processedStatus = statusRepository.findByName("PROCESSED");
 
-        if (processedStatus.isEmpty()){
+        if (processedStatus.isEmpty()) {
             throw new
                     AppException(ErrorCodes.RESOURCE_NOT_FOUND,
-                    "PROCESSED status not found");}
-
+                    "PROCESSED status not found");
+        }
 
 
         refunds.setStatus(processedStatus.get());
@@ -218,21 +234,9 @@ public class RefundServiceImpl implements RefundService {
     }
 
 
+    public List<RefundsDTO> fetchRefundsByStatus(RefundStatus dto) {
 
-    public List<RefundsDTO>fetchRefundsByStatus(RefundStatus dto){
-
-        List <Refunds>refunds=refundRepository.findRefundByStatusName(dto);
-
-        return refunds.stream()
-                .map(DTOConverters::convertToDTO)
-                .toList();
-
-
-    }
-
-    public List<RefundsDTO>fetchRefundsByOrder(RefundsDTO dto){
-
-        List <Refunds>refunds=refundRepository.findRefundByOrderId(dto.getOrder().getId());
+        List<Refunds> refunds = refundRepository.findRefundByStatusName(dto);
 
         return refunds.stream()
                 .map(DTOConverters::convertToDTO)
@@ -241,9 +245,16 @@ public class RefundServiceImpl implements RefundService {
 
     }
 
+    public List<RefundsDTO> fetchRefundsByOrder(RefundsDTO dto) {
+
+        List<Refunds> refunds = refundRepository.findRefundByOrderId(dto.getOrder().getId());
+
+        return refunds.stream()
+                .map(DTOConverters::convertToDTO)
+                .toList();
 
 
-
+    }
 
 
 }

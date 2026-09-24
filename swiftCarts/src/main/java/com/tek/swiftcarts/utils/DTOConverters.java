@@ -3,6 +3,8 @@ package com.tek.swiftcarts.utils;
 import com.tek.swiftcarts.dto.*;
 import com.tek.swiftcarts.model.*;
 
+import java.time.LocalDateTime;
+
 public class DTOConverters {
 
     public static InventoryDTO convertToDTO(Inventory inventory) {
@@ -430,4 +432,97 @@ public class DTOConverters {
 
         return dto;
     }
+
+
+
+
+    public static StaffDto convertToDTO(Staff staff) {
+
+        StaffDto dto=new StaffDto();
+        dto.setId(staff.getId());
+        dto.setFirstName(staff.getFirstName());
+        dto.setLastName(staff.getLastName());
+        dto.setPhoneNumber(staff.getPhoneNumber());
+        dto.setEmail(staff.getEmail());
+
+        if (staff.getStatus() != null) {
+            dto.setStatus(convertToDTO(staff.getStatus()));
+        }
+
+        return dto;
+    }
+
+    public static ShiftDto convertToDTO(Shift shift) {
+
+        ShiftDto dto = new ShiftDto();
+
+        dto.setId(shift.getId());
+        dto.setName(shift.getName());
+        dto.setShiftDate(shift.getShiftDate());
+        dto.setDescription(shift.getDescription());
+        dto.setEndTime(shift.getEndTime());
+        dto.setStartTime(shift.getStartTime());
+
+        if (shift.getStatus() != null) {
+            dto.setStatus(convertToDTO(shift.getStatus()));
+        }
+
+        return dto;
+    }
+
+
+
+    public static ShiftAssignmentDTO convertToDTO(ShiftAssignment shiftAssignment) {
+
+        ShiftAssignmentDTO dto = new ShiftAssignmentDTO();
+
+        dto.setId(shiftAssignment.getId());
+        dto.setAssignedAt(LocalDateTime.now());
+
+
+        if (shiftAssignment.getStatus() != null) {
+            dto.setStatus(convertToDTO(shiftAssignment.getStatus()));
+        }
+
+        if (shiftAssignment.getShift() != null) {
+            dto.setShift(convertToDTO(shiftAssignment.getShift()));
+        }
+
+        if (shiftAssignment.getAssignedBy() != null) {
+            dto.setAssignedBy(convertToDTO(shiftAssignment.getAssignedBy()));
+        }
+
+        if (shiftAssignment.getStaff() != null) {
+            dto.setStaff(convertToDTO(shiftAssignment.getStaff()));
+        }
+
+        return dto;
+    }
+
+    public static AttendanceDTO convertToDTO(Attendance attendance) {
+
+        AttendanceDTO dto = new AttendanceDTO();
+
+        dto.setId(attendance.getId());
+        dto.setClockIn(attendance.getClockIn());
+        dto.setClockOut(attendance.getClockOut());
+        dto.setIsPresent(attendance.getIsPresent());
+        dto.setAttendanceStatus(attendance.getAttendanceStatus());
+        dto.setNotes(attendance.getNotes());
+
+        if (attendance.getStaff() != null) {
+            dto.setStaff(convertToDTO(attendance.getStaff()));
+        }
+
+        if (attendance.getShiftAssignment() != null) {
+            dto.setShiftAssignment(convertToDTO(attendance.getShiftAssignment()));
+        }
+
+        if (attendance.getApprovedBy() != null) {
+            dto.setApprovedBy(convertToDTO(attendance.getApprovedBy()));
+        }
+
+        return dto;
+    }
+
 }

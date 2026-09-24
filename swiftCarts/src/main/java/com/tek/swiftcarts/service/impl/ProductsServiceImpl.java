@@ -41,7 +41,7 @@ public class ProductsServiceImpl implements ProductsService {
     private final OrderItemsRepository orderItemsRepository;
 
 
-    public SystemResponse registerProducts(ProductDTO dto, SwiftCartPrincipal principal){
+    public ProductDTO registerProducts(ProductDTO dto, SwiftCartPrincipal principal){
 
         Products products=new Products();
 
@@ -74,9 +74,9 @@ public class ProductsServiceImpl implements ProductsService {
                 .orElseThrow(() -> new AppException(ErrorCodes.INTERNAL_ERROR, "ACTIVE status not seeded"));
         products.setStatus(active);
 
-        productRepository.save(products);
+        Products saved = productRepository.save(products);
 
-        return new SystemResponse("200","Your Product is Registered Successfully","Products is Saved", ResponseState.SUCCESS);
+        return DTOConverters.convertToDTO(saved);
 
     }
 

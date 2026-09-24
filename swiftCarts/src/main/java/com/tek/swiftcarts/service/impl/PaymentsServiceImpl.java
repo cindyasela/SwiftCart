@@ -7,6 +7,7 @@ import com.tek.swiftcarts.exception.ErrorCodes;
 import com.tek.swiftcarts.model.*;
 import com.tek.swiftcarts.repository.*;
 import com.tek.swiftcarts.security.SwiftCartPrincipal;
+import com.tek.swiftcarts.service.MpesaService;
 import com.tek.swiftcarts.service.PaymentsService;
 import com.tek.swiftcarts.utils.DTOConverters;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ public class PaymentsServiceImpl implements PaymentsService {
     private final UsersRepository usersRepository;
     private final PaymentsStatusRepository paymentsStatusRepository;
     private final StatusRepository statusRepository;
+    private final MpesaService mpesaService;
 
     private Users resolveActor(SwiftCartPrincipal principal) {
 
@@ -119,5 +121,10 @@ public class PaymentsServiceImpl implements PaymentsService {
                 .stream()
                 .map(DTOConverters::convertToDTO)
                 .toList();
+    }
+
+    @Override
+    public PaymentsDTO checkPaymentStatusWithOperator(String paymentId) {
+        return mpesaService.checkPaymentStatus(paymentId);
     }
 }
