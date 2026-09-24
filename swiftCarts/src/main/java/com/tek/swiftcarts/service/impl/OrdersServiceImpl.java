@@ -157,7 +157,7 @@ public class OrdersServiceImpl  implements OrdersService {
                 if (product.getNumberOfProducts() < itemDto.getQuantity()) {
                     throw new AppException(
                             ErrorCodes.INVALID_REQUEST,
-                            "Sorry not enough product for this action. Available: " + product.getNumberOfProducts()
+                            "😢 Sorry not enough product for this action. Available: " + product.getNumberOfProducts()
                     );
                 }
 
@@ -387,7 +387,7 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
           if (cartItem.getProduct().getNumberOfProducts() < cartItem.getQuantity()) {
               throw new AppException(
                       ErrorCodes.INVALID_REQUEST,
-                      "Sorry not enough product for this action. Available: " + cartItem.getProduct().getNumberOfProducts()
+                      "😢 Sorry not enough product for this action. Available: " + cartItem.getProduct().getNumberOfProducts()
               );
           }
       }
