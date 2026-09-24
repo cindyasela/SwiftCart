@@ -11,7 +11,7 @@ public interface
 ShipmentsService {
 
 
-    SystemResponse createNewDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal);
+    ShipmentsDTO createNewDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal);
 
     SystemResponse dispatchDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal);
 

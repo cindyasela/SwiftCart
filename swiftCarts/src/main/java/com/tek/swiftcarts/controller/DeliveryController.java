@@ -29,9 +29,9 @@ public class DeliveryController {
     @Operation(summary = "Enter A Delivery",
             description= "Register New Delivery")
     @PostMapping("/new")
-    public ResponseEntity<SystemResponse>createNewDelivery(@RequestBody ShipmentsDTO dto, SwiftCartPrincipal principal){
+    public ResponseEntity<ShipmentsDTO>createNewDelivery(@RequestBody ShipmentsDTO dto, SwiftCartPrincipal principal){
 
-        SystemResponse newDelivery=shipmentsService.createNewDelivery(dto, principal);
+        ShipmentsDTO newDelivery=shipmentsService.createNewDelivery(dto, principal);
 
         return ResponseEntity.ok(newDelivery);
 

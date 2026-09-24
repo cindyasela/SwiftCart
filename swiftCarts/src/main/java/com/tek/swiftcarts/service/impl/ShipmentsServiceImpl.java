@@ -75,13 +75,9 @@ public class ShipmentsServiceImpl implements ShipmentsService {
 
         shipments.setStatus(pending);
 
-        shipmentsRepository.save(shipments);
+        Shipments saved = shipmentsRepository.save(shipments);
 
-
-
-        return new SystemResponse("New Delivery Has Been Added","Delivery Done","Done", ResponseState.SUCCESS);
-
-
+        return DTOConverters.convertToDTO(saved);
     }
 
     public SystemResponse dispatchDelivery(ShipmentsDTO dto, SwiftCartPrincipal principal) {
