@@ -239,6 +239,12 @@ public class OrdersServiceImpl  implements OrdersService {
 
      if (order.getPaymentStatus().getName().equals("Paid")){
          order.setStatus(confirmedStatus);
+
+         for (OrderItems item : order.getOrderItems()) {
+             Products product = item.getProduct();
+             product.setNumberOfProducts(product.getNumberOfProducts() - item.getQuantity());
+             productRepository.save(product);
+         }
      }
 
      order.setNotes(dto.getComments());
@@ -318,6 +324,12 @@ public List<OrdersDTO>fetchOrdersByPaymentStatus(OrdersDTO dto){
 
         if (order.getPaymentStatus().getName().equals("Paid")){
             order.setStatus(completeStatus);
+
+            for (OrderItems item : order.getOrderItems()) {
+                Products product = item.getProduct();
+                product.setNumberOfProducts(product.getNumberOfProducts() - item.getQuantity());
+                productRepository.save(product);
+            }
         }
 
         order.setNotes(dto.getComments());
