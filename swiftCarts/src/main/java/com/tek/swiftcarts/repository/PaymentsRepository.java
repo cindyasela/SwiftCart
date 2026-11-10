@@ -16,4 +16,7 @@ public interface PaymentsRepository extends JpaRepository<Payments, String> {
     Optional<Payments> findByCheckoutRequestId(String checkoutRequestId);
 
     List<Payments> findByStatus(TransactionStatus status);
+
+
+
 }

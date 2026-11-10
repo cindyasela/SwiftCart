@@ -6,7 +6,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-/** One row of the "total spent per supplier" summary. */
 @Getter
 @Setter
 @AllArgsConstructor

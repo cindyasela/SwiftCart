@@ -75,6 +75,8 @@ public class InventoryServiceImpl implements InventoryService {
         // depend on someone separately logging it on the Suppliers page.
         // NOTE: this is spend already incurred, not a SupplierRequest (an
         // ask sent TO the supplier for more stock, tracked separately).
+
+
         if (products.getSupplier() != null) {
             SupplierTransaction transaction = new SupplierTransaction();
             transaction.setSupplier(products.getSupplier());
@@ -120,6 +122,7 @@ public class InventoryServiceImpl implements InventoryService {
         // Mirror image of createInventory's increment - removing an entry
         // takes its quantity back off the product's total too, so the two
         // stay in sync in both directions.
+
         if (inventory.getProduct() != null) {
             Products products = inventory.getProduct();
             products.setNumberOfProducts(

@@ -23,6 +23,7 @@ import com.tek.swiftcarts.security.SwiftCartPrincipal;
 import com.tek.swiftcarts.service.ProductsService;
 import com.tek.swiftcarts.utils.DTOConverters;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -167,6 +168,12 @@ public class ProductsServiceImpl implements ProductsService {
         return dto;
     }
 
+    @Cacheable(value = "products", key = "#id")
+    public Products getProductById(String id) {
+        return productRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Product not found"));
+    }
 
 
 }
